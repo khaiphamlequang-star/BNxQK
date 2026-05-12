@@ -1,0 +1,226 @@
+--// BNxQK x Evade Bounce (Combined Script)
+local plrs = game:GetService("Players")
+local run = game:GetService("RunService")
+local uis = game:GetService("UserInputService")
+local Debris = game:GetService("Debris")
+
+local lp = plrs.LocalPlayer
+local gui = lp:WaitForChild("PlayerGui")
+
+-- Biến cấu hình Bounce
+local bounceEnabled = false
+local bounceHeight = 100
+local bounceDistance = 8
+
+-- Hàm tạo màu HSV
+local function hsv(h,s,v)
+	local i = math.floor(h*6)
+	local f = h*6 - i
+	local p = v*(1-s)
+	local q = v*(1-f*s)
+	local t = v*(1-(1-f)*s)
+	i = i%6
+	if i==0 then return Color3.new(v,t,p)
+	elseif i==1 then return Color3.new(q,v,p)
+	elseif i==2 then return Color3.new(p,v,t)
+	elseif i==3 then return Color3.new(p,q,v)
+	elseif i==4 then return Color3.new(t,p,v)
+	else return Color3.new(v,p,q) end
+end
+
+-- ==========================================
+-- INTRO SECTION
+-- ==========================================
+local function playIntro()
+	local scr = Instance.new("ScreenGui", gui)
+	scr.Name = "ANGEL_INTRO"
+	scr.DisplayOrder = 100
+	scr.ResetOnSpawn = false
+
+	local f = Instance.new("Frame", scr)
+	f.Size = UDim2.new(1, 0, 1, 0)
+	f.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	f.BorderSizePixel = 0
+
+	local txt = Instance.new("TextLabel", f)
+	txt.AnchorPoint = Vector2.new(0.5, 0.5)
+	txt.Position = UDim2.new(0.5, 0, 0.5, 0)
+	txt.Size = UDim2.new(0.8, 0, 0.3, 0)
+	txt.Font = Enum.Font.GothamBlack
+	txt.TextScaled = true
+	txt.BackgroundTransparency = 1
+	txt.TextTransparency = 1
+
+	local hue = 0
+	local conn = run.RenderStepped:Connect(function(dt)
+		hue = (hue + dt * 0.5) % 1
+		txt.TextColor3 = hsv(hue, 1, 1)
+	end)
+
+	local function show(str)
+		txt.Text = str
+		for i = 1, 0, -0.05 do txt.TextTransparency = i task.wait(0.04) end
+		task.wait(0.8)
+		for i = 0, 1, 0.05 do txt.TextTransparency = i task.wait(0.04) end
+	end
+
+	show("Introducing")
+	show("Bùi Nhật x Quang Khải")
+	conn:Disconnect()
+	scr:Destroy()
+end
+
+-- ==========================================
+-- LOGIC BOUNCE (GỐC)
+-- ==========================================
+local function isNearGround(hrp)
+    local rayParams = RaycastParams.new()
+    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+    rayParams.FilterDescendantsInstances = {hrp.Parent}
+    local offsets = {
+        Vector3.new(0,-bounceDistance,0),
+        Vector3.new(2,-bounceDistance,0),
+        Vector3.new(-2,-bounceDistance,0),
+        Vector3.new(0,-bounceDistance,2),
+        Vector3.new(0,-bounceDistance,-2)
+    }
+    for _,offset in ipairs(offsets) do
+        local r = workspace:Raycast(hrp.Position, offset, rayParams)
+        if r and r.Instance and r.Instance.CanCollide then return true end
+    end
+    return false
+end
+
+task.spawn(function()
+    while true do
+        if bounceEnabled then
+            local char = lp.Character
+            if char then
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    local vel = hrp.Velocity
+                    if vel.Y < -35 and isNearGround(hrp) then
+                        hrp.Velocity = Vector3.new(vel.X, bounceHeight, vel.Z)
+                        local fx = Instance.new("ParticleEmitter")
+                        fx.Texture = "rbxassetid://241594180"
+                        fx.Lifetime = NumberRange.new(0.3)
+                        fx.Speed = NumberRange.new(40)
+                        fx.Rate = 200
+                        fx.Parent = hrp
+                        Debris:AddItem(fx,0.3)
+                    end
+                end
+            end
+        end
+        task.wait()
+    end
+end)
+
+-- ==========================================
+-- MAIN UI (BNxQK STYLE)
+-- ==========================================
+local function makeUI()
+	for _, v in pairs(gui:GetChildren()) do
+		if v.Name == "BNxQK_BounceUI" then v:Destroy() end
+	end
+
+	local scr = Instance.new("ScreenGui", gui)
+	scr.Name = "BNxQK_BounceUI"
+	scr.ResetOnSpawn = false
+
+	local MainPanel = Instance.new("Frame", scr)
+	MainPanel.Size = UDim2.new(0, 110, 0, 110)
+	MainPanel.Position = UDim2.new(0.5, -55, 0.8, 0)
+	MainPanel.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+	MainPanel.BorderSizePixel = 0
+	
+	Instance.new("UICorner", MainPanel).CornerRadius = UDim.new(0, 15)
+	local Stroke = Instance.new("UIStroke", MainPanel)
+	Stroke.Thickness = 3
+	Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+	local Title = Instance.new("TextLabel", MainPanel)
+	Title.Size = UDim2.new(1, 0, 0.6, 0)
+	Title.Position = UDim2.new(0, 0, 0.1, 0)
+	Title.BackgroundTransparency = 1
+	Title.Text = "BNxQK"
+	Title.Font = Enum.Font.GothamBold
+	Title.TextSize = 20
+	Title.ZIndex = 2
+
+	local Status = Instance.new("TextLabel", MainPanel)
+	Status.Size = UDim2.new(1, 0, 0.3, 0)
+	Status.Position = UDim2.new(0, 0, 0.6, 0)
+	Status.BackgroundTransparency = 1
+	Status.Text = "OFF"
+	Status.TextColor3 = Color3.fromRGB(255, 50, 50)
+	Status.Font = Enum.Font.Code
+	Status.TextSize = 13
+	Status.ZIndex = 2
+
+	local ClickButton = Instance.new("TextButton", MainPanel)
+	ClickButton.Size = UDim2.new(1, 0, 1, 0)
+	ClickButton.BackgroundTransparency = 1
+	ClickButton.Text = ""
+	ClickButton.ZIndex = 3
+
+	local IsLocked = false
+	local LockBtn = Instance.new("TextButton", MainPanel)
+	LockBtn.Size = UDim2.new(0, 25, 0, 25)
+	LockBtn.Position = UDim2.new(1, -30, 0, 5)
+	LockBtn.BackgroundTransparency = 1
+	LockBtn.Text = "🔓"
+	LockBtn.ZIndex = 5
+	LockBtn.MouseButton1Click:Connect(function()
+		IsLocked = not IsLocked
+		LockBtn.Text = IsLocked and "🔒" or "🔓"
+	end)
+
+	-- Kéo thả UI
+	local dragging, dragStart, startPos
+	ClickButton.InputBegan:Connect(function(input)
+		if IsLocked then return end
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = MainPanel.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then dragging = false end
+			end)
+		end
+	end)
+
+	uis.InputChanged:Connect(function(input)
+		if dragging and not IsLocked and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local delta = input.Position - dragStart
+			MainPanel.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+
+	-- Bật/Tắt Bounce khi click
+	ClickButton.MouseButton1Click:Connect(function()
+		if dragging then return end
+		bounceEnabled = not bounceEnabled
+		if bounceEnabled then
+			Status.Text = "ON"
+			Status.TextColor3 = Color3.fromRGB(0, 255, 150)
+		else
+			Status.Text = "OFF"
+			Status.TextColor3 = Color3.fromRGB(255, 50, 50)
+		end
+	end)
+
+	-- Hiệu ứng Rainbow RGB
+	run.RenderStepped:Connect(function()
+		local color = hsv((tick() * 0.5) % 1, 1, 1)
+		Stroke.Color = color
+		Title.TextColor3 = color
+		LockBtn.TextColor3 = color
+	end)
+end
+
+-- Chạy Script
+task.spawn(function() 
+	playIntro() 
+	makeUI() 
+end)
