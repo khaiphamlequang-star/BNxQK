@@ -1,4 +1,4 @@
---// BNxQK Ultimate Hybrid (Full Rainbow Text Edition)
+--// BNxQK Ultimate Hybrid (0.5s Lag & Rainbow Text)
 local plrs = game:GetService("Players")
 local run = game:GetService("RunService")
 local uis = game:GetService("UserInputService")
@@ -260,14 +260,14 @@ local function makeUI()
 	end)
 	uis.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end end)
 
-	-- Lag Switch (1.0s)
+	-- Lag Switch (Set về 0.5s)
 	ClickButton.MouseButton1Click:Connect(function()
 		if OnCooldown then return end
 		OnCooldown = true
 		LagStatus.Text = "LAG: WAIT"
 		local t = os.clock()
-		while os.clock() - t < 1.0 do for i = 1, 1000000 do end end
-		task.wait(0.5)
+		while os.clock() - t < 0.5 do for i = 1, 1000000 do end end
+		task.wait(0.2) -- Thời gian hồi ngắn hơn cho 0.5s
 		LagStatus.Text = "LAG: READY"
 		OnCooldown = false
 	end)
@@ -294,7 +294,7 @@ local function makeUI()
 		if not OnCooldown then
 			LagStatus.TextColor3 = color
 		else
-			LagStatus.TextColor3 = Color3.fromRGB(255, 50, 50) -- Màu đỏ khi đang đợi
+			LagStatus.TextColor3 = Color3.fromRGB(255, 50, 50)
 		end
 		
 		-- Bounce Button Rainbow (Chỉ rainbow khi ON)
